@@ -14,24 +14,28 @@ public class Server implements AutoCloseable {
 
     public Server(int port) throws Exception {
         acceptorSocket = new ServerSocket(port);
-        acceptorThread = new Thread(() -> accepting(acceptorSocket));
+        acceptorThread = new Thread(() -> checkAccepting(acceptorSocket));
         acceptorThread.start();
     }
 
-    private static void accepting(ServerSocket acceptorSocket) {
+    private static void checkAccepting(ServerSocket acceptorSocket) {
         try {
-            accept(acceptorSocket);
+            accepting(acceptorSocket);
         } catch (Exception e) {
             System.err.println("Unable to accept.");
             e.printStackTrace();
         }
     }
 
-    private static void accept(ServerSocket acceptorSocket) throws IOException {
+    private static void accepting(ServerSocket acceptorSocket) throws IOException {
         while (!acceptorSocket.isClosed()) {
-            try (Socket accepted = acceptorSocket.accept()) {
-                handle(accepted);
-            }
+            accept(acceptorSocket);
+        }
+    }
+
+    private static void accept(ServerSocket acceptorSocket) throws IOException {
+        try (Socket accepted = acceptorSocket.accept()) {
+            handle(accepted);
         }
     }
 
