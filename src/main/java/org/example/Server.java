@@ -1,6 +1,7 @@
 package org.example;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
@@ -13,26 +14,35 @@ public class Server implements AutoCloseable {
 
     public Server(int port) throws Exception {
         acceptorSocket = new ServerSocket(port);
-        acceptorThread = new Thread(() -> {
-            try {
-                try (Socket accepted = acceptorSocket.accept()) {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(accepted.getInputStream()));
-                    while (true) {
-                        String line = reader.readLine();
-                        if (line.isEmpty()) {
-                            break;
-                        }
-                    }
-                    OutputStream output = accepted.getOutputStream();
-                    output.write("HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nOk.\n".getBytes(StandardCharsets.UTF_8));
-                    output.flush();
-                }
-            } catch (Exception e) {
-                System.err.println("Unable to accept.");
-                e.printStackTrace();
-            }
-        });
+        acceptorThread = new Thread(() -> accepting(acceptorSocket));
         acceptorThread.start();
+    }
+
+    private static void accepting(ServerSocket acceptorSocket) {
+        try {
+            accept(acceptorSocket);
+        } catch (Exception e) {
+            System.err.println("Unable to accept.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void accept(ServerSocket acceptorSocket) throws IOException {
+        try (Socket accepted = acceptorSocket.accept()) {
+            handle(accepted);
+        }
+    }
+
+    private static void handle(Socket accepted) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(accepted.getInputStream()));
+        boolean readingEnded = false;
+        while (!readingEnded) {
+            String line = reader.readLine();
+            readingEnded = line.isEmpty();
+        }
+        OutputStream output = accepted.getOutputStream();
+        output.write("HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nOk.\n".getBytes(StandardCharsets.UTF_8));
+        output.flush();
     }
 
     @Override
