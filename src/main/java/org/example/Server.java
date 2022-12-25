@@ -28,8 +28,10 @@ public class Server implements AutoCloseable {
     }
 
     private static void accept(ServerSocket acceptorSocket) throws IOException {
-        try (Socket accepted = acceptorSocket.accept()) {
-            handle(accepted);
+        while (!acceptorSocket.isClosed()) {
+            try (Socket accepted = acceptorSocket.accept()) {
+                handle(accepted);
+            }
         }
     }
 
